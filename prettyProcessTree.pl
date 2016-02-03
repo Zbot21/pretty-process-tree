@@ -17,6 +17,10 @@ seek $fh, 0, 0;
 $csv->column_names($csv->getline($fh));
 my @processes = @{$csv->getline_hr_all($fh)};
 
+my @COLORS = qw(black red green blue magenta cyan burlywood);
+my $NUM_COLORS = scalar @COLORS;
+print "Colors: @COLORS\nNum Colors: $NUM_COLORS\n";
+my $color_number = 0;
 if(not defined $parent){
 	$parent = 1;
 }
@@ -39,7 +43,7 @@ sub getChildProcesses {
 }
 
 sub generateGraph {
-	my $g = GraphViz->new();
+	my $g = GraphViz->new(overlap => false);
 	my $parent = shift;
 	$g->add_node('pid'.$parent);
 	recurseGraph($g, $parent);
@@ -51,10 +55,14 @@ sub recurseGraph {
 	my $parent = shift;
 	my @children = getChildProcesses($parent);
 	my $parentId = 'pid'.$parent;
+	my $color = $COLORS[$color_number];
+	if (scalar @children > 0){
+		$color_number = ($color_number + 1) % $NUM_COLORS;	
+	}
 	for my $child (@children){
-		my $childId = 'pid'.$child->{PID};
-		$g->add_node($childId);
-		$g->add_edge($parentId => $childId);
+		my $childId = "pid$child->{PID}";
+		$g->add_node($childId, label => "$childId\n$child->{CMD}");
+		$g->add_edge($parentId => $childId, color => $color);
 		recurseGraph($g, $child->{PID});
 	}
 }
