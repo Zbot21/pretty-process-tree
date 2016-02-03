@@ -6,6 +6,7 @@ use Data::Dumper;
 use GraphViz;
 
 my $parent=$ARGV[0];
+my $outfile=$ARGV[1];
 
 # Script designed for making pretty process trees
 my $psOutput=`ps -ael`;
@@ -17,7 +18,15 @@ seek $fh, 0, 0;
 $csv->column_names($csv->getline($fh));
 my @processes = @{$csv->getline_hr_all($fh)};
 
-generateGraph(1);
+if(not defined $parent){
+	$parent = 1;
+}
+
+if(not defined $outfile){
+	$outfile = "test.png";
+}
+
+generateGraph($parent);
 
 sub getChildProcesses {
 	my $parentPid = shift;
@@ -57,7 +66,7 @@ sub generateGraph {
 	my $childProcesses=getAllChildrenProcesses($parent);
 	$g->add_node('pid'.$parent);
 	recurseGraph($g, $childProcesses, $parent);
-	$g->as_png("test.png");
+	$g->as_png($outfile);
 }
 
 sub recurseGraph {
