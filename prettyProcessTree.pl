@@ -38,46 +38,23 @@ sub getChildProcesses {
 	return @children;
 }
 
-sub getAllChildrenProcesses {
-	my $parentPid = shift;
-	my %processChildren = ();
-	my @children = getChildProcesses($parentPid);
-	$processChildren{$parentPid} = \@children; 
-	for my $child (@children) {
-		getAllChildrenProcesses_recurse($child->{PID}, \%processChildren);
-	}
-	return \%processChildren;
-}
-
-sub getAllChildrenProcesses_recurse {
-	my $parentPid = shift;
-	my $processChildren = shift;
-	my @children = getChildProcesses($parentPid);
-	$processChildren->{$parentPid} = \@children;
-	for my $child (@children){
-		getAllChildrenProcesses_recurse($child->{PID}, $processChildren);
-	}
-}
-
 sub generateGraph {
 	my $g = GraphViz->new();
 	my $parent = shift;
-	my $childProcesses=getAllChildrenProcesses($parent);
 	$g->add_node('pid'.$parent);
-	recurseGraph($g, $childProcesses, $parent);
+	recurseGraph($g, $parent);
 	$g->as_png($outfile);
 }
 
 sub recurseGraph {
 	my $g = shift;
-	my $childProcesses = shift;
 	my $parent = shift;
-	my $children = $childProcesses->{$parent};
+	my @children = getChildProcesses($parent);
 	my $parentId = 'pid'.$parent;
-	for my $child (@{$children}){
+	for my $child (@children){
 		my $childId = 'pid'.$child->{PID};
 		$g->add_node($childId);
 		$g->add_edge($parentId => $childId);
-		recurseGraph($g, $childProcesses, $child->{PID});
+		recurseGraph($g, $child->{PID});
 	}
 }
