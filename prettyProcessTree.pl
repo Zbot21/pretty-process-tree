@@ -2,7 +2,6 @@
 
 use File::Temp qw/tempfile/;
 use Text::CSV;
-use Data::Dumper;
 use GraphViz;
 
 my $parent=$ARGV[0];
